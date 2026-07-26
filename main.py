@@ -4,7 +4,7 @@ class Satellite(SpaceEntity):
     def receive_signal(self, packet: Packet):
         if isinstance(packet,RelayPacket):
             inner_packet=packet.data
-            print("Unwrapping and forwarding to {inner_packet.receiver}")
+            print(f"Unwrapping and forwarding to {inner_packet.receiver}")
             attempt_transmission(inner_packet)
         else:
             print(f"Final destination reached: {packet.data}")
@@ -23,21 +23,24 @@ class RelayPacket(Packet):
     def __init__(self,pacdet_to_relay, sender, proxy):
         super().__init__(pacdet_to_relay,sender,proxy)
         
-
     def __repr__(self):
         return f"RelayPacket(Relaying [{self.data}] to {self.receiver} from {self.sender})"    
-   
+network=SpaceNetwork(level=3)   
 earth=SpaceEarth("earth",0)
-network=SpaceNetwork(level=3)
 sat1=Satellite("sat1",100)
 sat2=Satellite("sat2",200)
-p_final=Packet("Hello from Earth",sat1,sat2)
-p_earth_to_sat1=RelayPacket(p_final,earth,sat1)
+sat3=Satellite("sat3",300)
+sat4=Satellite("sat4",400)
+p_final=Packet("Hello from Earth",sat3,sat4)
+p_sat2_to_3=RelayPacket(p_final,sat2,sat3)
+p_sat1_to_2=RelayPacket(p_sat2_to_3,sat1,sat2)
+p_earth_to_sat1=RelayPacket(p_sat1_to_2,earth,sat1)
+
 
 def attempt_transmission(paket):
     while True:
         try:
-            network.send(p_earth_to_sat1)
+            network.send(paket)
             break
         except TemporalInterferenceError:
             print("Interference, waiting...")

@@ -9,8 +9,12 @@ class Satellite(SpaceEntity):
         else:
             print(f"Final destination reached: {packet.data}")
 
-class SpaceEntity:
-    pass
+class SpaceEarth(SpaceEntity):
+    def __init__(self, name, distance_from_earth):
+        super().__init__(name, distance_from_earth)
+    def receive_signal(self, packet):
+        pass        
+    
 
 class BrokenConnectionError(CommsError):
     pass  
@@ -23,16 +27,17 @@ class RelayPacket(Packet):
     def __repr__(self):
         return f"RelayPacket(Relaying [{self.data}] to {self.receiver} from {self.sender})"    
    
-
+earth=SpaceEarth("earth",0)
 network=SpaceNetwork(level=3)
 sat1=Satellite("sat1",100)
 sat2=Satellite("sat2",200)
-message=Packet("Alert received",sat1,sat2)
+p_final=Packet("Hello from Earth",sat1,sat2)
+p_earth_to_sat1=RelayPacket(p_final,earth,sat1)
 
 def attempt_transmission(paket):
     while True:
         try:
-            network.send(message)
+            network.send(p_earth_to_sat1)
             break
         except TemporalInterferenceError:
             print("Interference, waiting...")
@@ -48,7 +53,7 @@ def attempt_transmission(paket):
             raise BrokenConnectionError("broken conection")
 
 try:
-    attempt_transmission(message)
+    attempt_transmission(p_earth_to_sat1)
 except BrokenConnectionError:
     print("Transmission failed")
 
